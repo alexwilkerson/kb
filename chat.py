@@ -12,7 +12,7 @@ def enter_is_terminate(x):
 
 def main(stdscr):
     stdscr.clear()
-    #curses.cbreak()
+    curses.cbreak()
 
     maxy, maxx = stdscr.getmaxyx()
 
@@ -27,10 +27,9 @@ def main(stdscr):
 
     message_win = curses.newwin(1, 10, maxy - 2, 1)
     message_win.addstr("message:")
-    message_win.refresh()
 
     text_input = curses.newwin(2, maxx - 11, maxy - 2, 10)
-    # text_input.keypad(True)
+    text_input.keypad(True)
     tb = Textbox(text_input)
 
     """ RESIZE HANDLING """
@@ -38,25 +37,26 @@ def main(stdscr):
         #  chat_border.addstr("resized\n")
         main_chat.refresh()
         chat_border.refresh()
-        text_input.refresh()
         stdscr.refresh()
 
     signal.signal(signal.SIGWINCH, resize_handler)
     """ END RESIZE HANDLING """
 
     chat_border.refresh()
+    main_chat.refresh()
+    message_win.refresh()
     # text_input.refresh() THIS BREAKS THE EDITOR
 
     while True:
         word = tb.edit(enter_is_terminate)
-        word = word.strip()
+        word = word.rstrip('\n').strip()
         if word == "!exit":
             exit()
         else:
             word = word + "\n"
             main_chat.addstr(word)
             text_input.clear()
+            chat_border.refresh()
             main_chat.refresh()
-
 
 wrapper(main)
