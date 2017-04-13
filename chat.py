@@ -11,6 +11,7 @@ def enter_is_terminate(x):
     return x
 
 def main(stdscr):
+    stdscr.nodelay(True)
     stdscr.clear()
     curses.cbreak()
 
@@ -18,7 +19,7 @@ def main(stdscr):
 
     # lines, cols, y, x
     chat_border = curses.newwin(maxy - 2, maxx - 1, 0, 0)
-    chat_border.border()
+    chat_border.box()
     # chat_border.scrollok(True)
 
     chaty, chatx = chat_border.getmaxyx()
@@ -35,6 +36,10 @@ def main(stdscr):
     """ RESIZE HANDLING """
     def resize_handler(signum, frame):
         #  chat_border.addstr("resized\n")
+        stdscr.clear()
+        maxy, maxx = stdscr.getmaxyx()
+        chat_border = curses.newwin(maxy - 2, maxx - 1, 0, 0)
+        chat_border.box()
         main_chat.refresh()
         chat_border.refresh()
         stdscr.refresh()
