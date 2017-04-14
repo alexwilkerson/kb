@@ -2,6 +2,8 @@
 
 import os, sys, getpass
 import datetime
+import threading
+import time
 import signal
 import curses
 import curses.ascii
@@ -27,6 +29,13 @@ def vline():
 
 def hline():
     return getattr(curses, 'ACS_HLINE', ord('-'))
+
+def test_thread(chat_win, message_input):
+    while True:
+        chat_win.addstr("threading working.\n")
+        chat_win.refresh()
+        message_input.refresh()
+        time.sleep(1)
 
 def main(stdscr):
 
@@ -189,6 +198,10 @@ def main(stdscr):
         #      print("Resize error occurred.")
 
     signal.signal(signal.SIGWINCH, resize_handler)
+
+    t = threading.Thread(target=test_thread, args=(chat_win,message_input))
+    t.daemon = True
+    t.start()
 
     while True:
         out = textbox.edit(validate=validate)
