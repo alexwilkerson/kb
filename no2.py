@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os, sys, getpass
+import datetime
 import signal
 import curses
 import curses.ascii
@@ -13,6 +14,16 @@ ESCAPE = 27
 RETURN = 10
 SPACE = 32
 
+def send_to_chat(window, buf, msg):
+    window.addstr(thetime() + ' ')
+    buf.append(thetime() + ' ')
+
+def thetime():
+    return datetime.datetime.now().strftime("[%H:%M:%S]");
+
+def vline():
+    return getattr(curses, 'ACS_VLINE', ord('|'))
+
 def hline():
     return getattr(curses, 'ACS_HLINE', ord('-'))
 
@@ -21,12 +32,16 @@ def main(stdscr):
     # used to refresh the screen on resize
     chat_buffer = []
 
+
     # colors
     curses.start_color()
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+        curses.init_pair(i + 1, i, -1)
     #header
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
     #message
-    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(2, curses.COLOR_MAGENTA, -1)
 
     os.environ['ESCDELAY'] = '25'
 
@@ -38,7 +53,6 @@ def main(stdscr):
 
     curses.noecho()
     curses.cbreak()
-    curses.use_default_colors()
 
     stdscr.clear()
     stdscr.keypad(1)
@@ -54,8 +68,18 @@ def main(stdscr):
 
     # lines, cols, y, x
     # main chat window
-    chat_win = stdscr.subwin(maxy - 5, maxx - 1, 1, 0)
+    chat_win = stdscr.subwin(maxy - 5, maxx - 21, 1, 0)
     chat_win.scrollok(1)
+
+    user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
+    user_border.erase()
+    user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
+    user_border.refresh()
+
+    user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
+    user_win.addstr('users online:\n')
+    user_win.addstr('testuser\n')
+    user_win.addstr(USER)
 
     message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
     message_border.erase()
@@ -64,7 +88,7 @@ def main(stdscr):
 
     # just the left corner where it says messages
     message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-    message_prompt.addstr("message:")
+    message_prompt.addstr("message:", curses.color_pair(204))
 
     # the input field
     message_input = stdscr.subwin(1, maxx - 1 - 9, maxy - 3, 9)
@@ -105,7 +129,7 @@ def main(stdscr):
         return ch
 
     def resize_handler(signum, frame):
-        try:
+        #try:
             curses.endwin()
             curses.initscr()
             maxy, maxx = stdscr.getmaxyx()
@@ -117,12 +141,23 @@ def main(stdscr):
             header.refresh()
 
             chat_win.clear()
-            chat_win.resize(maxy - 5, maxx - 1)
+            chat_win.resize(maxy - 5, maxx - 21)
             chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
                 chat_win.addstr(line)
             chat_win.refresh()
+
+            user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
+            user_border.erase()
+            user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
+            user_border.refresh()
+
+            user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
+            user_win.addstr('users online:\n')
+            user_win.addstr('testuser\n')
+            user_win.addstr(USER)
+            user_win.refresh()
 
             message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
             message_border.erase()
@@ -137,15 +172,16 @@ def main(stdscr):
 
             message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
             message_prompt.clear()
-            message_prompt.addstr("message:")
+            message_prompt.addstr("message:", curses.color_pair(2))
             message_prompt.refresh()
 
+            message_input.erase()
             message_input.resize(1, maxx - 1 - 9)
             message_input.mvwin(maxy - 3, 9)
 
             stdscr.refresh()
-        except:
-            print("Resize error occurred.")
+        #  except:
+        #      print("Resize error occurred.")
 
     signal.signal(signal.SIGWINCH, resize_handler)
 
@@ -157,7 +193,7 @@ def main(stdscr):
         elif out == '!exit':
             exit()
         else:
-            out = out + '\n'
+            out = thetime() + " " + USER + ": " + out + '\n'
             chat_win.addstr(out)
             chat_buffer.append(out)
             message_input.clear()
