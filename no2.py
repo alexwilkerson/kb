@@ -13,7 +13,12 @@ SPACE = 32
 
 def main(stdscr):
 
+    # used to refresh the screen on resize
     chat_buffer = []
+
+    # colors
+    curses.start_color()
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
 
     os.environ['ESCDELAY'] = '25'
 
@@ -32,9 +37,16 @@ def main(stdscr):
 
     maxy, maxx = stdscr.getmaxyx()
 
+    # header bar
+    header = stdscr.subwin(1, maxx, 0, 0)
+    header.erase()
+    header.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
+    header.addstr('keybeard alpha')
+    header.refresh()
+
     # lines, cols, y, x
     # main chat window
-    chat_win = stdscr.subwin(maxy - 3, maxx - 1, 0, 0)
+    chat_win = stdscr.subwin(maxy - 4, maxx - 1, 1, 0)
     chat_win.scrollok(1)
 
     # just the left corner where it says messages
@@ -42,7 +54,7 @@ def main(stdscr):
     message_prompt.addstr("message:")
 
     # the input field
-    message_input = stdscr.derwin(1, maxx - 1 - 11, maxy - 3, 10)
+    message_input = stdscr.subwin(2, maxx - 1 - 9, maxy - 3, 9)
     curses.curs_set(1)
     textbox = textpad.Textbox(message_input)
     textbox.stripspaces = 0
@@ -80,9 +92,14 @@ def main(stdscr):
             maxy, maxx = stdscr.getmaxyx()
             stdscr.clear()
 
+            header.resize(1, maxx)
+            header.erase()
+            header.addstr('keybeard alpha')
+            header.refresh()
+
             chat_win.clear()
-            chat_win.resize(maxy - 3, maxx - 1)
-            chat_win.mvwin(0, 0)
+            chat_win.resize(maxy - 4, maxx - 1)
+            chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
                 chat_win.addstr(line)
@@ -93,7 +110,7 @@ def main(stdscr):
             message_prompt.addstr("message:")
             message_prompt.refresh()
 
-            message_input.resize(1, maxx - 1 - 11)
+            message_input.resize(1, maxx - 1 - 9)
             message_input.mvwin(maxy - 3, 10)
 
             stdscr.refresh()
@@ -105,7 +122,9 @@ def main(stdscr):
     while True:
         out = textbox.edit(validate=validate)
         out = out.strip()
-        if out == '!exit':
+        if out == '':
+            message_input.clear()
+        elif out == '!exit':
             exit()
         else:
             out = out + '\n'
