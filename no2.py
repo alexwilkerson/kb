@@ -5,6 +5,7 @@ import datetime
 import signal
 import curses
 import curses.ascii
+import culour
 from curses import wrapper, textpad
 
 USER = getpass.getuser()
@@ -77,7 +78,8 @@ def main(stdscr):
     user_border.refresh()
 
     user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
-    user_win.addstr('users online:\n')
+    culour.addstr(user_win, '\033[93musers online: (2)\n')
+    # user_win.addstr('users online:\n')
     user_win.addstr('testuser\n')
     user_win.addstr(USER)
 
@@ -88,7 +90,8 @@ def main(stdscr):
 
     # just the left corner where it says messages
     message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-    message_prompt.addstr("message:", curses.color_pair(204))
+    culour.addstr(message_prompt, "\033[95mmessage:")
+    # message_prompt.addstr("message:", curses.color_pair(204))
 
     # the input field
     message_input = stdscr.subwin(1, maxx - 1 - 9, maxy - 3, 9)
@@ -145,7 +148,8 @@ def main(stdscr):
             chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
-                chat_win.addstr(line)
+                # chat_win.addstr(line)
+                culour.addstr(chat_win, line)
             chat_win.refresh()
 
             user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
@@ -172,7 +176,7 @@ def main(stdscr):
 
             message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
             message_prompt.clear()
-            message_prompt.addstr("message:", curses.color_pair(2))
+            culour.addstr(message_prompt, "\033[95mmessage:")
             message_prompt.refresh()
 
             message_input.erase()
@@ -193,8 +197,9 @@ def main(stdscr):
         elif out == '!exit':
             exit()
         else:
-            out = thetime() + " " + USER + ": " + out + '\n'
-            chat_win.addstr(out)
+            out = thetime() + " \033[91m" + USER + ":\033[0m " + out + '\n'
+            culour.addstr(chat_win, out)
+            # chat_win.addstr(out)
             chat_buffer.append(out)
             message_input.clear()
             chat_win.refresh()
