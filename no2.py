@@ -78,7 +78,7 @@ def main(stdscr):
     user_border.refresh()
 
     user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
-    culour.addstr(user_win, '\033[93musers online: (2)\n')
+    culour.addstr(user_win, '\033[228musers online: (2)\n')
     # user_win.addstr('users online:\n')
     user_win.addstr('testuser\n')
     user_win.addstr(USER)
@@ -90,7 +90,7 @@ def main(stdscr):
 
     # just the left corner where it says messages
     message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-    culour.addstr(message_prompt, "\033[95mmessage:")
+    culour.addstr(message_prompt, "\033[10mmessage:")
     # message_prompt.addstr("message:", curses.color_pair(204))
 
     # the input field
@@ -158,7 +158,8 @@ def main(stdscr):
             user_border.refresh()
 
             user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
-            user_win.addstr('users online:\n')
+            culour.addstr(user_win, '\033[228musers online: (2)\n')
+            # user_win.addstr('users online:\n')
             user_win.addstr('testuser\n')
             user_win.addstr(USER)
             user_win.refresh()
@@ -176,7 +177,7 @@ def main(stdscr):
 
             message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
             message_prompt.clear()
-            culour.addstr(message_prompt, "\033[95mmessage:")
+            culour.addstr(message_prompt, "\033[10mmessage:")
             message_prompt.refresh()
 
             message_input.erase()
@@ -197,7 +198,7 @@ def main(stdscr):
         elif out == '!exit':
             exit()
         else:
-            out = thetime() + " \033[91m" + USER + ":\033[0m " + out + '\n'
+            out = thetime() + " \033[26m" + USER + ":\033[0m " + out + '\n'
             culour.addstr(chat_win, out)
             # chat_win.addstr(out)
             chat_buffer.append(out)

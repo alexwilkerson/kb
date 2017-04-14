@@ -3,13 +3,20 @@ import curses
 
 COLOR_PAIRS_CACHE = {}
 
+"""
+To add a custom color, add a character command to the TerminalColors
+class. Then add the name, and color code to the TERMINAL_COLOR_TO_CURSES array.
+"""
 
 class TerminalColors(object):
     MAGENTA = '[95'
     BLUE = '[94'
     GREEN = '[92'
     YELLOW = '[93'
+    LIGHT_YELLOW = '[228'
     RED = '[91'
+    PEACH = '[10'
+    NICE_BLUE = '[26'
     END = '[0'
 
 
@@ -19,7 +26,10 @@ TERMINAL_COLOR_TO_CURSES = {
     TerminalColors.GREEN: curses.COLOR_GREEN,
     TerminalColors.YELLOW: curses.COLOR_YELLOW,
     TerminalColors.BLUE: curses.COLOR_BLUE,
-    TerminalColors.MAGENTA: curses.COLOR_MAGENTA
+    TerminalColors.MAGENTA: curses.COLOR_MAGENTA,
+    TerminalColors.PEACH: 204,
+    TerminalColors.LIGHT_YELLOW: 228,
+    TerminalColors.NICE_BLUE: 26
 }
 
 
