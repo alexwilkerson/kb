@@ -1,15 +1,20 @@
 #!/usr/bin/python3
 
-import os, sys
+import os, sys, getpass
 import signal
 import curses
 import curses.ascii
 from curses import wrapper, textpad
 
+USER = getpass.getuser()
+
 # ASCII CODES
 ESCAPE = 27
 RETURN = 10
 SPACE = 32
+
+def hline():
+    return getattr(curses, 'ACS_HLINE', ord('-'))
 
 def main(stdscr):
 
@@ -18,7 +23,10 @@ def main(stdscr):
 
     # colors
     curses.start_color()
+    #header
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
+    #message
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
     os.environ['ESCDELAY'] = '25'
 
@@ -46,18 +54,29 @@ def main(stdscr):
 
     # lines, cols, y, x
     # main chat window
-    chat_win = stdscr.subwin(maxy - 4, maxx - 1, 1, 0)
+    chat_win = stdscr.subwin(maxy - 5, maxx - 1, 1, 0)
     chat_win.scrollok(1)
+
+    message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
+    message_border.erase()
+    message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
+    message_border.refresh()
 
     # just the left corner where it says messages
     message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
     message_prompt.addstr("message:")
 
     # the input field
-    message_input = stdscr.subwin(2, maxx - 1 - 9, maxy - 3, 9)
+    message_input = stdscr.subwin(1, maxx - 1 - 9, maxy - 3, 9)
     curses.curs_set(1)
     textbox = textpad.Textbox(message_input)
     textbox.stripspaces = 0
+
+    footer = stdscr.subwin(1, maxx, maxy - 1, 0)
+    footer.erase()
+    footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
+    footer.addstr(USER)
+    footer.refresh()
 
     stdscr.refresh()
 
@@ -98,12 +117,23 @@ def main(stdscr):
             header.refresh()
 
             chat_win.clear()
-            chat_win.resize(maxy - 4, maxx - 1)
+            chat_win.resize(maxy - 5, maxx - 1)
             chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
                 chat_win.addstr(line)
             chat_win.refresh()
+
+            message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
+            message_border.erase()
+            message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
+            message_border.refresh()
+
+            footer = stdscr.subwin(1, maxx, maxy - 1, 0)
+            footer.erase()
+            footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
+            footer.addstr(USER)
+            footer.refresh()
 
             message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
             message_prompt.clear()
@@ -111,7 +141,7 @@ def main(stdscr):
             message_prompt.refresh()
 
             message_input.resize(1, maxx - 1 - 9)
-            message_input.mvwin(maxy - 3, 10)
+            message_input.mvwin(maxy - 3, 9)
 
             stdscr.refresh()
         except:
