@@ -90,7 +90,7 @@ def main(stdscr):
 
     # just the left corner where it says messages
     message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-    culour.addstr(message_prompt, "\033[10mmessage:")
+    culour.addstr(message_prompt, "\033[11mmessage:")
     # message_prompt.addstr("message:", curses.color_pair(204))
 
     # the input field
@@ -136,7 +136,7 @@ def main(stdscr):
             curses.endwin()
             curses.initscr()
             maxy, maxx = stdscr.getmaxyx()
-            stdscr.clear()
+            stdscr.erase()
 
             header.resize(1, maxx)
             header.erase()
@@ -177,7 +177,7 @@ def main(stdscr):
 
             message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
             message_prompt.clear()
-            culour.addstr(message_prompt, "\033[10mmessage:")
+            culour.addstr(message_prompt, "\033[11mmessage:")
             message_prompt.refresh()
 
             message_input.erase()
@@ -198,7 +198,7 @@ def main(stdscr):
         elif out == '!exit':
             exit()
         else:
-            out = thetime() + " \033[26m" + USER + ":\033[0m " + out + '\n'
+            out = thetime() + " \033[10m\033[26m" + USER + ":\033[0m " + out + '\n'
             culour.addstr(chat_win, out)
             # chat_win.addstr(out)
             chat_buffer.append(out)
