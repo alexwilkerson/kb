@@ -4,6 +4,7 @@ import os, sys, getpass
 import datetime
 import threading
 import time
+import random
 import signal
 import curses
 import curses.ascii
@@ -12,8 +13,10 @@ from curses import wrapper, textpad
 
 lock = threading.Lock()
 
-BAR_FG = 8
-BAR_BG = 102
+BAR_FG = 107
+BAR_BG = 24
+MESSAGE_CLR = 26
+LINE_CLR = 10
 
 TITLE = 'keybeard alpha'
 USER = getpass.getuser()
@@ -64,6 +67,51 @@ def add_line(chat_win, string, chat_buffer):
         culour.addstr(chat_win, line)
     chat_win.refresh()
 
+def rand_theme(stdscr, header, footer, message_input, chat_win, chat_buffer, user_win):
+    global BAR_FG, BAR_BG, MESSAGE_CLR, LINE_CLR
+
+    maxy, maxx = stdscr.getmaxyx()
+
+    BAR_FG = random.randint(0,256)
+    add_line(chat_win, 'BAR_FG: ' + str(BAR_FG) + '\n', chat_buffer)
+    BAR_BG = random.randint(0,256)
+    add_line(chat_win, 'BAR_BG: ' + str(BAR_BG) + '\n', chat_buffer)
+    MESSAGE_CLR = random.randint(0,256)
+    add_line(chat_win, 'MESSAGE_CLR: ' + str(MESSAGE_CLR) + '\n', chat_buffer)
+    LINE_CLR = random.randint(0,256)
+    add_line(chat_win, 'LINE_CLR: ' + str(LINE_CLR) + '\n', chat_buffer)
+
+    #header
+    curses.init_pair(1, BAR_FG, BAR_BG)
+    header.clear()
+    header.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
+    header.addstr(0, int((maxx-len(TITLE))/2), TITLE)
+    footer.clear()
+    footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
+
+    stdscr.attron(curses.color_pair(LINE_CLR))
+    stdscr.hline(maxy - 4, 0, hline(), maxx)
+    stdscr.vline(2, maxx - 20, vline(), maxy - 6)
+    stdscr.attroff(curses.color_pair(LINE_CLR))
+    stdscr.attron(curses.color_pair(MESSAGE_CLR))
+    stdscr.addstr(maxy - 3, 0, "message:")
+    stdscr.attroff(curses.color_pair(MESSAGE_CLR))
+
+    user_win.clear()
+    culour.addstr(user_win, '\033[' + str(MESSAGE_CLR) + 'musers: (2)\n')
+    user_win.addstr('testuser\n')
+    user_win.addstr(USER)
+
+    stdscr.touchwin()
+    stdscr.refresh()
+    header.touchwin()
+    header.refresh()
+    footer.touchwin()
+    footer.refresh()
+    user_win.touchwin()
+    user_win.refresh()
+    message_input.refresh()
+
 def main(stdscr):
 
     chat_buffer = []
@@ -76,7 +124,7 @@ def main(stdscr):
     #header
     curses.init_pair(1, BAR_FG, BAR_BG)
     #message
-    curses.init_pair(2, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(271, curses.COLOR_MAGENTA, -1)
 
     os.environ['ESCDELAY'] = '25'
 
@@ -99,8 +147,7 @@ def main(stdscr):
     chat_win.scrollok(1)
 
     user_win = curses.newwin(maxy - 5, 18, 1, maxx - 18)
-    culour.addstr(user_win, '\033[73musers online: (2)\n')
-    # user_win.addstr('users online:\n')
+    culour.addstr(user_win, '\033[73musers: (2)\n')
     user_win.addstr('testuser\n')
     user_win.addstr(USER)
 
@@ -120,11 +167,13 @@ def main(stdscr):
     footer.erase()
     footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
 
-    stdscr.attron(curses.color_pair(73))
+    stdscr.attron(curses.color_pair(LINE_CLR))
     stdscr.hline(maxy - 4, 0, hline(), maxx)
     stdscr.vline(2, maxx - 20, vline(), maxy - 6)
-    stdscr.attron(curses.color_pair(73))
+    stdscr.attroff(curses.color_pair(LINE_CLR))
+    stdscr.attron(curses.color_pair(MESSAGE_CLR))
     stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(73))
+    stdscr.attroff(curses.color_pair(MESSAGE_CLR))
 
     stdscr.refresh()
     message_input.refresh()
@@ -194,11 +243,18 @@ def main(stdscr):
             #  stdscr.vline(2, maxx - 20, vline(), maxy - 6)
             #  stdscr.hline(maxy - 4, 0, hline(), maxx)
             #  stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(219))
-            stdscr.attron(curses.color_pair(73))
+            #  stdscr.attron(curses.color_pair(73))
+            #  stdscr.hline(maxy - 4, 0, hline(), maxx)
+            #  stdscr.vline(2, maxx - 20, vline(), maxy - 6)
+            #  stdscr.attron(curses.color_pair(73))
+            #  stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(73))
+            stdscr.attron(curses.color_pair(LINE_CLR))
             stdscr.hline(maxy - 4, 0, hline(), maxx)
             stdscr.vline(2, maxx - 20, vline(), maxy - 6)
-            stdscr.attron(curses.color_pair(73))
-            stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(73))
+            stdscr.attroff(curses.color_pair(LINE_CLR))
+            stdscr.attron(curses.color_pair(MESSAGE_CLR))
+            stdscr.addstr(maxy - 3, 0, "message:")
+            stdscr.attroff(curses.color_pair(MESSAGE_CLR))
 
             # message_input.erase()
             message_input.resize(1, maxx - 1 - 9)
@@ -238,8 +294,11 @@ def main(stdscr):
         out = out.strip()
         if out == '':
             message_input.clear()
-        elif out == '!exit':
+        elif out == '.e':
             exit()
+        elif out == '.r':
+            rand_theme(stdscr, header, footer, message_input, chat_win, chat_buffer, user_win)
+            message_input.clear()
         else:
             # 300 is bold
             out = thetime() + " \033[300m\033[57m" + USER + ":\033[0m " + out + '\n'
