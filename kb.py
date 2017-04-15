@@ -208,7 +208,7 @@ def main(stdscr):
             # refresh textbox
             # textbox.do_command(curses.ascii.FF)
 
-            # stdscr.touchwin()
+            stdscr.touchwin()
             stdscr.refresh()
             user_win.touchwin()
             user_win.refresh()
