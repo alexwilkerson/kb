@@ -10,7 +10,10 @@ import curses.ascii
 import culour
 from curses import wrapper, textpad
 
+lock = threading.Lock()
+
 USER = getpass.getuser()
+# used to refresh the screen on resize
 
 # ASCII CODES
 ESCAPE = 27
@@ -30,18 +33,24 @@ def vline():
 def hline():
     return getattr(curses, 'ACS_HLINE', ord('-'))
 
-def test_thread(chat_win, message_input):
+def test_thread(chat_win, message_input, chat_buffer):
     while True:
-        chat_win.addstr("threading working.\n")
-        chat_win.refresh()
-        message_input.refresh()
+        with lock:
+            add_line(chat_win, "testing working.\n", chat_buffer)
+            message_input.refresh()
         time.sleep(1)
+
+def add_line(chat_win, string, chat_buffer):
+    chat_win.erase()
+    chat_buffer.append(string)
+    cols, rows = chat_win.getmaxyx()
+    for line in chat_buffer[-rows + 1:]:
+        culour.addstr(chat_win, line)
+    chat_win.refresh()
 
 def main(stdscr):
 
-    # used to refresh the screen on resize
     chat_buffer = []
-
 
     # colors
     curses.start_color()
@@ -81,29 +90,29 @@ def main(stdscr):
     chat_win = stdscr.subwin(maxy - 5, maxx - 21, 1, 0)
     chat_win.scrollok(1)
 
-    user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
-    user_border.erase()
-    user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
-    user_border.refresh()
+    #  user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
+    #  user_border.erase()
+    #  user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
+    #  user_border.refresh()
 
-    user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
+    user_win = curses.newwin(maxy - 5, 18, 1, maxx - 18)
     culour.addstr(user_win, '\033[228musers online: (2)\n')
     # user_win.addstr('users online:\n')
     user_win.addstr('testuser\n')
     user_win.addstr(USER)
 
-    message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
-    message_border.erase()
-    message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
-    message_border.refresh()
+    #  message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
+    #  message_border.erase()
+    #  message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
+    #  message_border.refresh()
 
     # just the left corner where it says messages
-    message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-    culour.addstr(message_prompt, "\033[11mmessage:")
+    # message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
     # message_prompt.addstr("message:", curses.color_pair(204))
 
     # the input field
-    message_input = stdscr.subwin(1, maxx - 1 - 9, maxy - 3, 9)
+    message_input = curses.newwin(1, maxx - 1 - 9, maxy - 3, 9)
+    # message_input.leaveok(1)
     curses.curs_set(1)
     textbox = textpad.Textbox(message_input)
     textbox.stripspaces = 0
@@ -114,30 +123,21 @@ def main(stdscr):
     footer.addstr(USER)
     footer.refresh()
 
+    stdscr.hline(maxy - 4, 0, hline(), maxx)
+    stdscr.vline(2, maxx - 20, vline(), maxy - 6)
+    stdscr.addstr(curses.LINES - 3, 0, "message:", curses.color_pair(219))
+
     stdscr.refresh()
+    message_input.refresh()
+    user_win.refresh()
 
     def validate(ch):
         if ch == RETURN:
-            return 7
+            # curses.ascii.BEL is termination key for textboxes
+            return curses.ascii.BEL
         # fix backspace for iterm
         if ch == curses.ascii.DEL:
             ch = curses.KEY_BACKSPACE
-        #  if ch == curses.KEY_REFRESH:
-        #      chat_win.addstr("WORKING")
-        #      maxy, maxx = stdscr.getmaxyx()
-        #      stdscr.clear()
-
-        #      chat_win.resize(maxy - 20, maxx - 1)
-        #      chat_win.mvwin(0, 0)
-
-        #      message_prompt.resize(1, 10)
-        #      message_prompt.mvwin(maxy - 3, 0)
-
-        #      message_input.resize(1, maxx - 1 - 11)
-        #      message_input.resize(maxy - 3, 10)
-
-        #      stdscr.refresh()
-        #      curses.doupdate()
         return ch
 
     def resize_handler(signum, frame):
@@ -148,58 +148,71 @@ def main(stdscr):
             stdscr.erase()
 
             header.resize(1, maxx)
-            header.erase()
+            header.clear()
             header.addstr('keybeard alpha')
-            header.refresh()
+            header.noutrefresh()
 
             chat_win.clear()
             chat_win.resize(maxy - 5, maxx - 21)
-            chat_win.mvwin(1, 0)
+            #  chat_win.resize(maxy - 5, maxx - 21)
+            # chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
                 # chat_win.addstr(line)
                 culour.addstr(chat_win, line)
-            chat_win.refresh()
+            chat_win.noutrefresh()
 
-            user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
-            user_border.erase()
-            user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
-            user_border.refresh()
+            #  user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
+            #  user_border.erase()
+            #  user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
+            #  user_border.refresh()
 
-            user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
-            culour.addstr(user_win, '\033[228musers online: (2)\n')
-            # user_win.addstr('users online:\n')
-            user_win.addstr('testuser\n')
-            user_win.addstr(USER)
-            user_win.refresh()
+            # user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
+            # user_win.clear()
+            user_win.resize(maxy - 5, 18)
+            user_win.mvwin(1, maxx - 18)
+            #  culour.addstr(user_win, '\033[228musers online: (2)\n')
+            #  user_win.addstr('testuser\n')
+            #  user_win.addstr(USER)
+            user_win.noutrefresh()
 
-            message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
-            message_border.erase()
-            message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
-            message_border.refresh()
+            #  message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
+            #  message_border.erase()
+            #  message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
+            #  message_border.refresh()
 
             footer = stdscr.subwin(1, maxx, maxy - 1, 0)
-            footer.erase()
+            footer.clear()
             footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
             footer.addstr(USER)
-            footer.refresh()
+            footer.noutrefresh()
 
-            message_prompt = stdscr.subwin(1, 9, maxy - 3, 0)
-            message_prompt.clear()
-            culour.addstr(message_prompt, "\033[11mmessage:")
-            message_prompt.refresh()
+            stdscr.vline(2, maxx - 20, vline(), maxy - 6)
+            stdscr.hline(maxy - 4, 0, hline(), maxx)
+            stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(219))
 
-            message_input.erase()
+            # message_input.erase()
             message_input.resize(1, maxx - 1 - 9)
             message_input.mvwin(maxy - 3, 9)
+            # fixes resizing issue with textbox
+            textbox._update_max_yx()
+            # refresh textbox
+            # textbox.do_command(curses.ascii.FF)
 
+            # stdscr.touchwin()
             stdscr.refresh()
+            user_win.touchwin()
+            user_win.refresh()
+            message_input.touchwin()
+            message_input.refresh()
+            curses.doupdate()
+
         #  except:
         #      print("Resize error occurred.")
 
     signal.signal(signal.SIGWINCH, resize_handler)
 
-    t = threading.Thread(target=test_thread, args=(chat_win,message_input))
+    t = threading.Thread(target=test_thread, args=(chat_win,message_input,chat_buffer))
     t.daemon = True
     t.start()
 
@@ -212,10 +225,7 @@ def main(stdscr):
             exit()
         else:
             out = thetime() + " \033[10m\033[26m" + USER + ":\033[0m " + out + '\n'
-            culour.addstr(chat_win, out)
-            # chat_win.addstr(out)
-            chat_buffer.append(out)
+            add_line(chat_win, out, chat_buffer)
             message_input.clear()
-            chat_win.refresh()
 
 wrapper(main)
