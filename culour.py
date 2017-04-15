@@ -56,7 +56,7 @@ def _color_str_to_color_pair(color):
 
 def addstr(window, string):
     # split but \033 which stands for a color change
-    color_split = string.split('\033')
+    color_split = string.split('\033[')
 
     # Print the first part of the line without color change
     default_color_pair = _get_color(-1, -1)#curses.COLOR_WHITE, curses.COLOR_BLACK)
@@ -67,17 +67,17 @@ def addstr(window, string):
 
     for substring in color_split[1:]:
         color_str = substring.split('m')[0]
-        if color_str == TerminalColors.BOLD:
+        if color_str == '300':# TerminalColors.BOLD:
             bold = 1
             continue
-        if color_str == '[0':
+        if color_str == '0':
             bold = 0
         substring = substring[len(color_str)+1:]
-        color_pair = _color_str_to_color_pair(color_str)
+        # color_pair = _color_str_to_color_pair(color_str)
         if bold:
-            window.addstr(substring, curses.color_pair(color_pair) + curses.A_BOLD)
+            window.addstr(substring, curses.color_pair(int(color_str)) + curses.A_BOLD)
         else:
-            window.addstr(substring, curses.color_pair(color_pair))
+            window.addstr(substring, curses.color_pair(int(color_str)))
 
 #  def _inner_addstr(window, string, y=-1, x=-1, nl=0):
 #      assert curses.has_colors(), "Curses wasn't configured to support colors. Call curses.start_color()"
