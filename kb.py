@@ -206,48 +206,18 @@ def main(stdscr):
 
             chat_win.clear()
             chat_win.resize(maxy - 5, maxx - 21)
-            #  chat_win.resize(maxy - 5, maxx - 21)
-            # chat_win.mvwin(1, 0)
             chaty, chatx = chat_win.getmaxyx()
             for line in chat_buffer[-chaty:]:
-                # chat_win.addstr(line)
                 culour.addstr(chat_win, line)
             chat_win.noutrefresh()
 
-            #  user_border = stdscr.subwin(maxy - 4, 1, 1, maxx - 20)
-            #  user_border.erase()
-            #  user_border.border(' ',vline(),' ',' ',' ',' ',' ',' ');
-            #  user_border.refresh()
-
-            # user_win = stdscr.subwin(maxy - 5, 18, 1, maxx - 18)
-            # user_win.clear()
             user_win.resize(maxy - 5, 18)
             user_win.mvwin(1, maxx - 18)
-            #  culour.addstr(user_win, '\033[228musers online: (2)\n')
-            #  user_win.addstr('testuser\n')
-            #  user_win.addstr(USER)
             user_win.noutrefresh()
 
-            #  message_border = stdscr.subwin(1, maxx, maxy - 4, 0)
-            #  message_border.erase()
-            #  message_border.border(' ',' ',' ',hline(),' ',' ',' ',' ');
-            #  message_border.refresh()
-
-            # footer = stdscr.subwin(1, maxx, maxy - 1, 0)
-            #  footer.clear()
-            #  footer.bkgd(SPACE, curses.color_pair(1) + curses.A_BOLD)
-            #  footer.addstr(USER)
             footer.resize(1, maxx)
             footer.mvwin(maxy - 1, 0)
 
-            #  stdscr.vline(2, maxx - 20, vline(), maxy - 6)
-            #  stdscr.hline(maxy - 4, 0, hline(), maxx)
-            #  stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(219))
-            #  stdscr.attron(curses.color_pair(73))
-            #  stdscr.hline(maxy - 4, 0, hline(), maxx)
-            #  stdscr.vline(2, maxx - 20, vline(), maxy - 6)
-            #  stdscr.attron(curses.color_pair(73))
-            #  stdscr.addstr(maxy - 3, 0, "message:", curses.color_pair(73))
             stdscr.attron(curses.color_pair(LINE_CLR))
             stdscr.hline(maxy - 4, 0, hline(), maxx)
             stdscr.vline(2, maxx - 20, vline(), maxy - 6)
@@ -256,7 +226,6 @@ def main(stdscr):
             stdscr.addstr(maxy - 3, 0, "message:")
             stdscr.attroff(curses.color_pair(MESSAGE_CLR))
 
-            # message_input.erase()
             message_input.resize(1, maxx - 1 - 9)
             message_input.mvwin(maxy - 3, 9)
             # fixes resizing issue with textbox
