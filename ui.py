@@ -101,7 +101,7 @@ class UI:
         self.chat_win.refresh()
 
     def redraw_users(self):
-        self.users_win.clear()
+        self.users_win.erase()
         self.users_win.resize(self.rows - 5, 18)
         self.users_win.mvwin(1, self.cols - 18)
         self.color_parse_addstr(self.users_win, '\033[73musers: (' + str(len(self.userlist)) + ')\n')
@@ -144,6 +144,44 @@ class UI:
                 window.addstr(substring, curses.color_pair(int(color_str)) + curses.A_BOLD)
             else:
                 window.addstr(substring, curses.color_pair(int(color_str)))
+
+    def input_loop(self):
+        while True:
+            out = self.input_textbox.edit(validate=self._validate)
+            out = out.rstrip()
+            if out == '':
+                pass
+            elif out == '.e':
+                exit()
+            elif out == '.r':
+                self.random_theme()
+            else:
+                self.send_input(out)
+            self.input_win.clear()
+            self.input_win.cursyncup()
+
+    def random_theme(self):
+        self.BAR_FG_COLOR = random.randint(2,256)
+        self.BAR_BG_COLOR = random.randint(2,256)
+        self.MESSAGE_COLOR = random.randint(2,256)
+        self.LINE_COLOR = random.randint(2,256)
+        self.redraw_ui()
+
+    def send_input(self, out):
+            self.chatbuffer.append(out + '\n')
+            if len(self.chatbuffer) > self.rows:
+                self.chatbuffer = self.chatbuffer[-self.rows:]
+            self.redraw_chat()
+
+    def _validate(self, ch):
+        # 10 is RETURN key
+        if ch == 10:
+            # curses.ascii.BEL is termination key for textboxes
+            return curses.ascii.BEL
+        # fix backspace for iterm
+        if ch == curses.ascii.DEL:
+            ch = curses.KEY_BACKSPACE
+        return ch
 
     def _vline(self):
         return getattr(curses, 'ACS_VLINE', ord('|'))
