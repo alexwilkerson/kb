@@ -22,7 +22,7 @@ def client_handler(client, c_address):
     finally:
         with clients_lock:
             clients.remove(client)
-    print('Disconnected from {}'.format(address))
+    print('Disconnected from {}'.format(c_address))
     client.close()
 
 def server(address=('localhost', 4242), backlog=5):
