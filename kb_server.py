@@ -1,20 +1,29 @@
+import threading
 from socket import socket, AF_INET, SOCK_STREAM
 
-def client_handler(client_sock, client_addr):
-    print('Connected to {}'.format(client_addr))
+clients = set()
+clients_lock = threading.Lock()
+
+def client_handler(client, address):
+    print('Connected to {}'.format(address))
+    with clients_lock:
+        clients.add(client)
     try:
-        #  user = client_sock.recv(1024)
-        #  client_sock.sendall(user)
         while True:
-            msg = client_sock.recv(1024)
-            if not msg:
+            data = client.recv(1024)
+            if not data:
                 break
-            print(msg.decode('utf-8'))
-            client_sock.send(msg)
+            print(data.decode('utf-8'))
+            with clients_lock:
+                for c in clients:
+                    client.sendall(data)
     except socket.error:
         print('Socket error occurred.')
-    print('Disconnected from {}'.format(client_addr))
-    client_sock.close()
+    finally:
+        with clients_lock:
+            clients.remove(client)
+    print('Disconnected from {}'.format(address))
+    client.close()
 
 def server(address=('localhost', 4242), backlog=5):
     print('Keybeard server started on address {}.'.format(address[1]))
@@ -22,8 +31,8 @@ def server(address=('localhost', 4242), backlog=5):
     sock.bind(address)
     sock.listen(backlog)
     while True:
-        client_sock, client_addr = sock.accept()
-        client_handler(client_sock, client_addr)
+        client, address = sock.accept()
+        client_handler(client, address)
 
 def main():
     server()
