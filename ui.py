@@ -17,7 +17,7 @@ class UI:
     MESSAGE_COLOR = 26
     LINE_COLOR = 10
 
-    def __init__(self, stdscr, title, user):
+    def __init__(self, stdscr, s, chat_lock, title, user):
 
         curses.noecho()
         curses.cbreak()
@@ -30,6 +30,8 @@ class UI:
         stdscr.keypad(1)
 
         self.stdscr = stdscr
+        self.s = s
+        self.chat_lock = chat_lock
         self.rows, self.cols = stdscr.getmaxyx()
 
         self.title = title
@@ -168,10 +170,12 @@ class UI:
         self.redraw_ui()
 
     def send_input(self, out):
-            self.chatbuffer.append(out + '\n')
+        self.s.send(out.encode())
+        # self.chatbuffer.append(out + '\n')
+        with self.chat_lock:
             if len(self.chatbuffer) > self.rows:
                 self.chatbuffer = self.chatbuffer[-self.rows:]
-            self.redraw_chat()
+        # self.redraw_chat()
 
     def _validate(self, ch):
         # 10 is RETURN key
