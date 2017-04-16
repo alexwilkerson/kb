@@ -4,8 +4,8 @@ import socket
 clients = set()
 clients_lock = threading.Lock()
 
-def client_handler(client, address):
-    print('Connected to {}'.format(address))
+def client_handler(client, c_address):
+    print('Connected to {}'.format(c_address))
     with clients_lock:
         clients.add(client)
     try:
@@ -32,9 +32,10 @@ def server(address=('localhost', 4242), backlog=5):
     sock.bind(address)
     sock.listen(backlog)
     while True:
-        client, address = sock.accept()
-        client_handler(client, address)
-        threading.Thread.start_new_thread(target=client_handler, args=(client,address))
+        client, c_address = sock.accept()
+        t = threading.Thread(target=client_handler, args=(client,c_address))
+        t.daemon = True
+        t.start()
 
 def main():
     server()
