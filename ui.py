@@ -115,7 +115,7 @@ class UI:
         self.input_win.resize(1, self.cols - 1 - 9)
         self.input_win.mvwin(self.rows - 3, 9)
         # fixes resizing issue with textbox
-        self.input_textbox._update_max_yx()
+        # self.input_textbox._update_maxyx()
         self.input_win.refresh()
         self.input_win.cursyncup()
 

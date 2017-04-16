@@ -1,5 +1,5 @@
 import threading
-from socket import socket, AF_INET, SOCK_STREAM
+import socket
 
 clients = set()
 clients_lock = threading.Lock()
@@ -16,7 +16,7 @@ def client_handler(client, address):
             print(data.decode('utf-8'))
             with clients_lock:
                 for c in clients:
-                    client.sendall(data)
+                    c.sendall(data)
     except socket.error:
         print('Socket error occurred.')
     finally:
@@ -27,12 +27,14 @@ def client_handler(client, address):
 
 def server(address=('localhost', 4242), backlog=5):
     print('Keybeard server started on address {}.'.format(address[1]))
-    sock = socket(AF_INET, SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(address)
     sock.listen(backlog)
     while True:
         client, address = sock.accept()
         client_handler(client, address)
+        threading.Thread.start_new_thread(target=client_handler, args=(client,address))
 
 def main():
     server()

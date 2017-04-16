@@ -26,6 +26,9 @@ def reconnect(ui):
             server = ('', 4242)
             s = socket(AF_INET, SOCK_STREAM)
             s.connect(server)
+            ui.s = s
+            ui.chatbuffer.append('Reconnected.\n')
+            ui.redraw_ui()
             return s
         except:
             s.close()
