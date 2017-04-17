@@ -52,7 +52,7 @@ class UI:
         self.chat_win.scrollok(True)
         self.users_win = curses.newwin(*users_hwyx)
         self.input_win = curses.newwin(*input_hwyx)
-        self.input_textbox = textpad.Textbox(self.input_win)
+        self.input_textbox = textpad.Textbox(self.input_win, insert_mode=True)
         self.input_textbox.stripspaces = 0
 
         self.redraw_ui()
@@ -78,8 +78,8 @@ class UI:
             self.redraw_chat()
             self.redraw_users()
             self.redraw_input()
-        except:
-            print("Error drawing UI.")
+        except Exception as e:
+            print("Error drawing UI " + str(e))
 
     def redraw_title(self):
         self.title_win.clear()
@@ -94,7 +94,7 @@ class UI:
         self.footer_win.mvwin(self.rows - 1, 0)
         self.footer_win.bkgd(' ', curses.color_pair(1) + curses.A_BOLD)
         self.footer_win.addstr(' ' + self.user)
-        self.footer_win.addstr(0, self.cols - 6, datetime.datetime.now().strftime("%H:%M"))
+        self.footer_win.addstr(0, self.cols - 6, datetime.datetime.now().strftime('%H:%M'))
         self.footer_win.refresh()
 
     def update_chat(self):

@@ -16,7 +16,7 @@ def send_users(sock):
     users = []
     with clients_lock:
         users = list(clients.keys())
-    users.append('monster')
+    users.append('idle monster')
     f = sock.makefile('wb', 1024)
     pickle.dump(users, f, pickle.HIGHEST_PROTOCOL)
     f.close()

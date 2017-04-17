@@ -7,6 +7,7 @@ import getpass
 import curses
 import threading
 import pickle
+import datetime
 from threading import Lock
 from socket import socket, AF_INET, SOCK_STREAM
 from time import sleep
@@ -51,6 +52,17 @@ def read_obj(sock):
     sock.send(b' ')
     return data
 
+def clock(ui):
+    while True:
+        #  ui.input_win.nodelay(1)
+        #  ui.redraw_footer()
+        #  ui.input_win.nodelay(0)
+        #  ui.input_win.refresh()
+        #  curses.initscr()
+        ui.redraw_footer()
+        ui.input_win.refresh()
+        sleep(1)
+
 def listener(ui, s, chat_lock, username):
     try:
         s.send(username.encode('utf-8'))
@@ -59,7 +71,7 @@ def listener(ui, s, chat_lock, username):
     except:
         pass
     while True:
-        #  try:
+        try:
             data = s.recv(1024)
             data = data.decode().strip()
             if len(data) > 0:
@@ -77,12 +89,14 @@ def listener(ui, s, chat_lock, username):
             else:
                 with chat_lock:
                     ui.chatbuffer.append('Lost connection to server.\n')
-                ui.redraw_ui()
+                #ui.redraw_ui()
+                ui.redraw_chat()
+                ui.input_win.refresh()
                 s.close()
                 sleep(1)
                 s = reconnect(username, ui)
-        #  except Exception as e:
-        #      ui.chatbuffer.append('Error occurred, tell Alex: ' + str(e) + '\n')
+        except Exception as e:
+            ui.chatbuffer.append('Error occurred, tell Alex: ' + str(e) + '\n')
 
 def main(stdscr):
     stdscr.clear()
@@ -106,6 +120,10 @@ def main(stdscr):
     listener_thread = threading.Thread(target=listener, args=(ui,s,chat_lock, username))
     listener_thread.daemon = True
     listener_thread.start()
+
+    clock_thread = threading.Thread(target=clock, args=(ui,))
+    clock_thread.daemon = True
+    clock_thread.start()
 
     ui.input_loop()
 
