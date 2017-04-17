@@ -39,7 +39,7 @@ class UI:
         self.title = title
         self.user = user
 
-        self.userlist = ['alex', 'kimberly']
+        self.userlist = []
         self.chatbuffer = []
 
         title_hwyx = (1, self.cols, 0, 0)
