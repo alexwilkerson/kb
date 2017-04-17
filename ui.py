@@ -27,6 +27,8 @@ class UI:
         for i in range(0, curses.COLORS):
             curses.init_pair(i, i, -1)
 
+        curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
+
         stdscr.keypad(1)
 
         self.stdscr = stdscr
@@ -61,8 +63,6 @@ class UI:
         try:
             self.rows, self.cols = self.stdscr.getmaxyx()
 
-            curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
-
             self.stdscr.clear()
             self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
             self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
@@ -79,6 +79,8 @@ class UI:
             self.redraw_users()
             self.redraw_input()
         except Exception as e:
+            with open('ui_error.txt', 'w') as file:
+                file.write('err: ' + str(e))
             print("Error drawing UI " + str(e))
 
     def redraw_title(self):
@@ -129,7 +131,6 @@ class UI:
         # fixes resizing issue with textbox
         # self.input_textbox._update_maxyx()
         self.input_win.refresh()
-        self.input_win.cursyncup()
 
     def color_parse_addstr(self, window, string):
         """
@@ -179,6 +180,7 @@ class UI:
         self.BAR_BG_COLOR = random.randint(2,256)
         self.MESSAGE_COLOR = random.randint(2,256)
         self.LINE_COLOR = random.randint(2,256)
+        curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
         self.redraw_ui()
 
     def send_input(self, out):

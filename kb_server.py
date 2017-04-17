@@ -4,12 +4,26 @@ import threading
 import socket
 import pickle
 import datetime
+import re
+import random
 
 clients = {}
 clients_lock = threading.Lock()
 
 def thetime():
     return datetime.datetime.now().strftime("[%H:%M:%S]");
+
+def roll(dice, username):
+    try:
+        a,b,c=re.findall("^(\d*)d(\d+)(\+\d+)?$",dice)[0];the_roll=int(c or 0)+(sum(random.randint(1,int(b))for i in range(int(a or 1)))or q)
+        response = thetime() + " \033[94m" + username + " rolled \033[125m" + dice + " \033[94mand got a \033[125m" + str(the_roll) + "\033[94m."
+        with clients_lock:
+            for c in clients.values():
+                c.sendall(response.encode())
+    except Exception as e:
+        print(str(e))
+        with clients_lock:
+            clients[username].sendall('\033[160mWhoopsie! Enter something like \"!roll 1d20\".'.encode())
 
 def send_users(sock):
     sock.sendall('$USERLIST$'.encode())
@@ -40,14 +54,22 @@ def client_handler(client, c_address):
             data = client.recv(1024)
             if not data:
                 break
-            print(data.decode('utf-8'))
-            with clients_lock:
-                for c in clients.values():
-                    if c == client:
-                        response = '{} \033[89m{}:\033[0m {}'.format(thetime(), username, data.decode()).encode()
-                    else:
-                        response = '{} \033[20m{}:\033[0m {}'.format(thetime(), username, data.decode()).encode()
-                    c.sendall(response)
+            if data.decode().rstrip()[:5] == '.roll':
+                data = data.decode().split()
+                if len(data) == 1:
+                    dice = '1d20'
+                else:
+                    dice = data[1]
+                roll(dice, username)
+            else:
+                print(data.decode('utf-8'))
+                with clients_lock:
+                    for c in clients.values():
+                        if c == client:
+                            response = '{} \033[89m{}:\033[0m {}'.format(thetime(), username, data.decode()).encode()
+                        else:
+                            response = '{} \033[20m{}:\033[0m {}'.format(thetime(), username, data.decode()).encode()
+                        c.sendall(response)
     except socket.error:
         print('Socket error occurred.')
     finally:
