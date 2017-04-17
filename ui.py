@@ -58,25 +58,28 @@ class UI:
         self.redraw_ui()
 
     def redraw_ui(self):
-        self.rows, self.cols = self.stdscr.getmaxyx()
+        try:
+            self.rows, self.cols = self.stdscr.getmaxyx()
 
-        curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
+            curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
 
-        self.stdscr.clear()
-        self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
-        self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
-        self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
-        self.stdscr.attroff(curses.color_pair(self.LINE_COLOR))
-        self.stdscr.attron(curses.color_pair(self.MESSAGE_COLOR))
-        self.stdscr.addstr(self.rows - 3, 0, "message:")
-        self.stdscr.attroff(curses.color_pair(self.MESSAGE_COLOR))
-        self.stdscr.refresh()
+            self.stdscr.clear()
+            self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
+            self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
+            self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
+            self.stdscr.attroff(curses.color_pair(self.LINE_COLOR))
+            self.stdscr.attron(curses.color_pair(self.MESSAGE_COLOR))
+            self.stdscr.addstr(self.rows - 3, 0, "message:")
+            self.stdscr.attroff(curses.color_pair(self.MESSAGE_COLOR))
+            self.stdscr.refresh()
 
-        self.redraw_title()
-        self.redraw_footer()
-        self.redraw_chat()
-        self.redraw_users()
-        self.redraw_input()
+            self.redraw_title()
+            self.redraw_footer()
+            self.redraw_chat()
+            self.redraw_users()
+            self.redraw_input()
+        except:
+            print("Error drawing UI.")
 
     def redraw_title(self):
         self.title_win.clear()
@@ -94,12 +97,21 @@ class UI:
         self.footer_win.addstr(0, self.cols - 6, datetime.datetime.now().strftime("%H:%M"))
         self.footer_win.refresh()
 
+    def update_chat(self):
+        self.chat_win.clear()
+        chat_rows, chat_cols = self.chat_win.getmaxyx()
+        with self.chat_lock:
+            for line in self.chatbuffer[-chat_rows:]:
+                self.color_parse_addstr(self.chat_win, line)
+        self.chat_win.refresh()
+
     def redraw_chat(self):
         self.chat_win.clear()
         self.chat_win.resize(self.rows - 5, self.cols - 21)
         chat_rows, chat_cols = self.chat_win.getmaxyx()
-        for line in self.chatbuffer[-chat_rows:]:
-            self.color_parse_addstr(self.chat_win, line)
+        with self.chat_lock:
+            for line in self.chatbuffer[-chat_rows:]:
+                self.color_parse_addstr(self.chat_win, line)
         self.chat_win.refresh()
 
     def redraw_users(self):
