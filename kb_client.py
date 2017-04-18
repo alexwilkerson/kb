@@ -83,7 +83,9 @@ def listener(ui, s, chat_lock, username):
             else:
                 with chat_lock:
                     ui.chatbuffer.append('Lost connection to server.\n')
-                ui.redraw_ui()
+                ui.redraw_chat()
+                ui.input_win.refresh()
+                # ui.redraw_ui()
                 s.close()
                 sleep(1)
                 s = reconnect(username, ui)
@@ -113,10 +115,16 @@ def main(stdscr):
     listener_thread.daemon = True
     listener_thread.start()
 
-    clock_thread = threading.Thread(target=clock, args=(ui,))
-    clock_thread.daemon = True
-    clock_thread.start()
+    #  clock_thread = threading.Thread(target=clock, args=(ui,))
+    #  clock_thread.daemon = True
+    #  clock_thread.start()
 
+    #  while True:
+    #      c = stdscr.getch()
+    #      ui.chatbuffer.append(str(c) + '\n')
+    #      ui.redraw_chat()
+    #  while True:
+    #      ui.input_textbox.edit()
     ui.input_loop()
 
 wrapper(main)

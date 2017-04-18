@@ -54,16 +54,20 @@ class UI:
         self.chat_win.scrollok(True)
         self.users_win = curses.newwin(*users_hwyx)
         self.input_win = curses.newwin(*input_hwyx)
+        self.input_win.nodelay(True)
         self.input_textbox = textpad.Textbox(self.input_win, insert_mode=True)
         self.input_textbox.stripspaces = 0
 
         self.redraw_ui()
+        curses.doupdate()
 
     def redraw_ui(self):
         try:
             self.rows, self.cols = self.stdscr.getmaxyx()
 
-            self.stdscr.clear()
+            # this completely destroys the screen
+            #  self.stdscr.clear()
+            self.stdscr.erase()
             self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
             self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
             self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
@@ -84,14 +88,16 @@ class UI:
             print("Error drawing UI " + str(e))
 
     def redraw_title(self):
-        self.title_win.clear()
+        # self.title_win.clear()
+        self.title_win.erase()
         self.title_win.resize(1, self.cols)
         self.title_win.bkgd(' ', curses.color_pair(1) + curses.A_BOLD)
         self.title_win.addstr(0, int((self.cols-len(self.title))/2), self.title)
         self.title_win.refresh()
 
     def redraw_footer(self):
-        self.footer_win.clear()
+        # self.footer_win.clear()
+        self.footer_win.erase()
         self.footer_win.resize(1, self.cols)
         self.footer_win.mvwin(self.rows - 1, 0)
         self.footer_win.bkgd(' ', curses.color_pair(1) + curses.A_BOLD)
@@ -100,7 +106,8 @@ class UI:
         self.footer_win.refresh()
 
     def update_chat(self):
-        self.chat_win.clear()
+        #  self.chat_win.clear()
+        self.chat_win.erase()
         chat_rows, chat_cols = self.chat_win.getmaxyx()
         with self.chat_lock:
             for line in self.chatbuffer[-chat_rows:]:
@@ -108,7 +115,7 @@ class UI:
         self.chat_win.refresh()
 
     def redraw_chat(self):
-        self.chat_win.clear()
+        self.chat_win.erase()
         self.chat_win.resize(self.rows - 5, self.cols - 21)
         chat_rows, chat_cols = self.chat_win.getmaxyx()
         with self.chat_lock:
@@ -171,9 +178,11 @@ class UI:
             elif out == '.r':
                 self.random_theme()
             else:
+                pass
                 self.send_input(out)
-            self.input_win.clear()
-            self.input_win.cursyncup()
+            self.input_win.erase()
+            self.input_win.refresh()
+            # self.input_win.cursyncup()
 
     def random_theme(self):
         self.BAR_FG_COLOR = random.randint(2,256)
@@ -197,9 +206,12 @@ class UI:
             # curses.ascii.BEL is termination key for textboxes
             return curses.ascii.BEL
         # fix backspace for iterm
-        if ch == curses.ascii.DEL:
+        if ch == curses.ascii.DEL or ch == curses.KEY_BACKSPACE:
             ch = curses.KEY_BACKSPACE
-        return ch
+        if ch >= 0 and ch < 264:
+            return ch
+        else:
+            pass
 
     def _vline(self):
         return getattr(curses, 'ACS_VLINE', ord('|'))
