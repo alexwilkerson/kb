@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import signal
 import atexit
 import getpass
@@ -48,8 +49,6 @@ def read_obj(sock):
     f = sock.makefile('rb', 1024)
     data = pickle.load(f)
     f.close()
-    # tells server that obj was received
-    sock.send(b' ')
     return data
 
 def clock(ui):
@@ -72,6 +71,7 @@ def listener(ui, s, chat_lock, username):
             if len(data) > 0:
                 if data.strip() == "$USERLIST$":
                     ui.userlist = read_obj(s)
+                    s.sendall('$USERLIST$'.encode())
                     ui.redraw_users()
                     ui.input_win.refresh()
                 else:
@@ -102,7 +102,10 @@ def main(stdscr):
     chat_lock = threading.Lock()
 
     title = 'kb alpha'
-    username = getpass.getuser()
+    if len(sys.argv) == 2:
+        username = sys.argv[1]
+    else:
+        username = getpass.getuser()
 
     ui = UI(stdscr, s, chat_lock, title, username)
 

@@ -35,16 +35,16 @@ def send_users(sock):
     pickle.dump(users, f, pickle.HIGHEST_PROTOCOL)
     f.close()
     # receives response from client
-    sock.recv(64)
+    # empty_buffer = sock.recv(32)
     print('Userlist sent.')
 
 def client_handler(client, c_address):
     print('Connected to {}'.format(c_address))
     username = client.recv(1024)
     username = username.decode()
-    print('User: {}\n'.format(username))
     with clients_lock:
         clients[username] = client
+    print('User: {}\n'.format(username))
     try:
         enter_string = '{} \033[94m{} entered the room.'.format(thetime(), username)
         for c in clients.values():
@@ -61,6 +61,8 @@ def client_handler(client, c_address):
                 else:
                     dice = data[1]
                 roll(dice, username)
+            elif data.decode() == '$USERLIST$':
+                pass
             else:
                 print(data.decode('utf-8'))
                 with clients_lock:
@@ -73,13 +75,14 @@ def client_handler(client, c_address):
     except socket.error:
         print('Socket error occurred.')
     finally:
+        exit_string = '{} \033[94m{} left the room.'.format(thetime(), username)
         with clients_lock:
             del clients[username]
         print('Disconnected from {}'.format(c_address))
         client.close()
         for c in clients.values():
             send_users(c)
-            c.sendall(enter_string.encode())
+            c.sendall(exit_string.encode())
 
 def server(address=('localhost', 4242), backlog=5):
     print('Keybeard server started on address {}.'.format(address[1]))
