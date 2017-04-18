@@ -72,14 +72,16 @@ def listener(ui, s, chat_lock, username):
             if len(data) > 0:
                 if data.strip() == "$USERLIST$":
                     ui.userlist = read_obj(s)
-                    #ui.redraw_users()
-                    #ui.input_win.refresh()
+                    ui.redraw_users()
+                    ui.input_win.refresh()
                 else:
                     with chat_lock:
                         ui.chatbuffer.append(data + '\n')
                         #  curses.endwin()
                         #  curses.initscr()
-                    ui.redraw_ui()
+                    #ui.redraw_ui()
+                    ui.redraw_chat()
+                    ui.input_win.refresh()
             else:
                 with chat_lock:
                     ui.chatbuffer.append('Lost connection to server.\n')
@@ -115,9 +117,9 @@ def main(stdscr):
     listener_thread.daemon = True
     listener_thread.start()
 
-    #  clock_thread = threading.Thread(target=clock, args=(ui,))
-    #  clock_thread.daemon = True
-    #  clock_thread.start()
+    clock_thread = threading.Thread(target=clock, args=(ui,))
+    clock_thread.daemon = True
+    clock_thread.start()
 
     #  while True:
     #      c = stdscr.getch()
