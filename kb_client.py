@@ -32,7 +32,7 @@ def reconnect(username, ui):
             s = socket(AF_INET, SOCK_STREAM)
             s.connect(server)
             ui.s = s
-            s.send(username.encode())
+            s.sendall(username.encode())
             ui.chatbuffer.append('Reconnected.\n')
             ui.redraw_ui()
             return s
@@ -59,7 +59,7 @@ def clock(ui):
 
 def listener(ui, s, chat_lock, username):
     try:
-        s.send(username.encode('utf-8'))
+        s.sendall(username.encode('utf-8'))
         #  ui.userlist = read_obj(s)
         #  ui.redraw_users()
     except:
@@ -69,11 +69,13 @@ def listener(ui, s, chat_lock, username):
             data = s.recv(1024)
             data = data.decode().strip()
             if len(data) > 0:
-                if data.strip() == "$USERLIST$":
+                if data == "$USERLIST$":
                     ui.userlist = read_obj(s)
                     s.sendall('$USERLIST$'.encode())
                     ui.redraw_users()
                     ui.input_win.refresh()
+                elif data == '$USERNAME$':
+                    pass
                 else:
                     with chat_lock:
                         ui.chatbuffer.append(data + '\n')
