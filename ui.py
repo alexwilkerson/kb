@@ -23,11 +23,18 @@ class UI:
         curses.cbreak()
         curses.curs_set(1)
         curses.use_default_colors()
-        curses.start_color()
+        try:
+            curses.start_color()
+        except:
+            pass
         for i in range(0, curses.COLORS):
             curses.init_pair(i, i, -1)
 
-        curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
+        if curses.can_change_color():
+            curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
+        else:
+            curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_CYAN)
+            curses.init_pair(2, curses.COLOR_CYAN, -1)
 
         stdscr.keypad(1)
 
@@ -68,20 +75,29 @@ class UI:
             # this completely destroys the screen
             #  self.stdscr.clear()
             self.stdscr.erase()
-            self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
-            self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
-            self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
-            self.stdscr.attroff(curses.color_pair(self.LINE_COLOR))
-            self.stdscr.attron(curses.color_pair(self.MESSAGE_COLOR))
-            self.stdscr.addstr(self.rows - 3, 0, "message:")
-            self.stdscr.attroff(curses.color_pair(self.MESSAGE_COLOR))
-            self.stdscr.refresh()
+            if curses.can_change_color():
+                self.stdscr.attron(curses.color_pair(self.LINE_COLOR))
+                self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
+                self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
+                self.stdscr.attroff(curses.color_pair(self.LINE_COLOR))
+                self.stdscr.attron(curses.color_pair(self.MESSAGE_COLOR))
+                self.stdscr.addstr(self.rows - 3, 0, "message:")
+                self.stdscr.attroff(curses.color_pair(self.MESSAGE_COLOR))
+            else:
+                self.stdscr.attron(curses.color_pair(2))
+                self.stdscr.hline(self.rows - 4, 0, self._hline(), self.cols)
+                self.stdscr.vline(2, self.cols - 20, self._vline(), self.rows - 6)
+                self.stdscr.addstr(self.rows - 3, 0, "message:")
+                self.stdscr.attroff(curses.color_pair(2))
+            self.stdscr.noutrefresh()
 
             self.redraw_title()
             self.redraw_footer()
             self.redraw_chat()
             self.redraw_users()
             self.redraw_input()
+
+            curses.doupdate()
         except Exception as e:
             with open('ui_error.txt', 'w') as file:
                 file.write('err: ' + str(e))
@@ -93,7 +109,7 @@ class UI:
         self.title_win.resize(1, self.cols)
         self.title_win.bkgd(' ', curses.color_pair(1) + curses.A_BOLD)
         self.title_win.addstr(0, int((self.cols-len(self.title))/2), self.title)
-        self.title_win.refresh()
+        self.title_win.noutrefresh()
 
     def redraw_footer(self):
         # self.footer_win.clear()
@@ -103,7 +119,7 @@ class UI:
         self.footer_win.bkgd(' ', curses.color_pair(1) + curses.A_BOLD)
         self.footer_win.addstr(' ' + self.user)
         self.footer_win.addstr(0, self.cols - 6, datetime.datetime.now().strftime('%H:%M'))
-        self.footer_win.refresh()
+        self.footer_win.noutrefresh()
 
     def update_chat(self):
         #  self.chat_win.clear()
@@ -112,7 +128,7 @@ class UI:
         with self.chat_lock:
             for line in self.chatbuffer[-chat_rows:]:
                 self.color_parse_addstr(self.chat_win, line)
-        self.chat_win.refresh()
+        self.chat_win.noutrefresh()
 
     def redraw_chat(self):
         self.chat_win.erase()
@@ -121,7 +137,7 @@ class UI:
         with self.chat_lock:
             for line in self.chatbuffer[-chat_rows:]:
                 self.color_parse_addstr(self.chat_win, line)
-        self.chat_win.refresh()
+        self.chat_win.noutrefresh()
 
     def redraw_users(self):
         self.users_win.erase()
@@ -130,7 +146,7 @@ class UI:
         self.color_parse_addstr(self.users_win, '\033[73musers: (' + str(len(self.userlist)) + ')\n')
         for u in self.userlist:
             self.users_win.addstr(u + '\n')
-        self.users_win.refresh()
+        self.users_win.noutrefresh()
 
     def redraw_input(self):
         self.input_win.resize(1, self.cols - 1 - 9)
@@ -149,7 +165,10 @@ class UI:
 
         # Print the first part of the line without color change
         curses.init_pair(0, -1, -1)#curses.COLOR_WHITE, curses.COLOR_BLACK)
-        window.addstr(color_split[0], curses.color_pair(0))
+        if curses.can_change_color():
+            window.addstr(color_split[0], curses.color_pair(0))
+        else:
+            window.addstr(color_split[0])
 
         # Iterate over the rest of the line-parts and print them with their colors
         bold = 0
@@ -163,9 +182,15 @@ class UI:
                 bold = 0
             substring = substring[len(color_str)+1:]
             if bold:
-                window.addstr(substring, curses.color_pair(int(color_str)) + curses.A_BOLD)
+                if curses.can_change_color():
+                    window.addstr(substring, curses.color_pair(int(color_str)) + curses.A_BOLD)
+                else:
+                    window.addstr(substring, curses.A_BOLD)
             else:
-                window.addstr(substring, curses.color_pair(int(color_str)))
+                if curses.can_change_color():
+                    window.addstr(substring, curses.color_pair(int(color_str)))
+                else:
+                    window.addstr(substring)
 
     def input_loop(self):
         while True:
@@ -185,12 +210,16 @@ class UI:
             # self.input_win.cursyncup()
 
     def random_theme(self):
-        self.BAR_FG_COLOR = random.randint(2,256)
-        self.BAR_BG_COLOR = random.randint(2,256)
-        self.MESSAGE_COLOR = random.randint(2,256)
-        self.LINE_COLOR = random.randint(2,256)
-        curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
-        self.redraw_ui()
+        if curses.can_change_color():
+            self.BAR_FG_COLOR = random.randint(2,256)
+            self.BAR_BG_COLOR = random.randint(2,256)
+            self.MESSAGE_COLOR = random.randint(2,256)
+            self.LINE_COLOR = random.randint(2,256)
+            curses.init_pair(1, self.BAR_FG_COLOR, self.BAR_BG_COLOR)
+            self.redraw_ui()
+        else:
+            self.chat_win.addstr('Random theme colors not supported on your terminal.\n')
+            self.chat_win.refresh()
 
     def send_input(self, out):
         self.s.send(out.encode())
